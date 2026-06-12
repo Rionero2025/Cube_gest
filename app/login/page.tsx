@@ -1,4 +1,20 @@
 import { PageShell } from "@/components/PageShell";
-export default function Page() {
-  return <PageShell><section className="hero container"><div className="hero-card"><div><div className="badge">📄 Login</div><h1>Login</h1><p className="lead">Pagina predisposta nella nuova architettura Next.js. Nel prossimo step collegheremo dati reali e funzioni operative.</p></div><div className="visual-panel"><div className="message">Modulo pronto per sviluppo.</div></div></div></section></PageShell>;
+import { LoginForm } from "@/components/forms/LoginForm";
+
+export default function LoginPage() {
+  return (
+    <PageShell>
+      <section className="hero container">
+        <div className="hero-card">
+          <div>
+            <div className="badge">🔐 Accesso riservato</div>
+            <h1>Accedi al tuo spazio <span>CUBE</span></h1>
+            <p className="lead">Entra nella dashboard aziendale o nell’area Super Admin.</p>
+            <div className="message">Dopo aver inizializzato il database puoi usare: superadmin / admin123.</div>
+          </div>
+          <LoginForm />
+        </div>
+      </section>
+    </PageShell>
+  );
 }

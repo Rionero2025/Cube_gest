@@ -1,4 +1,23 @@
+import { Suspense } from "react";
 import { PageShell } from "@/components/PageShell";
-export default function Page() {
-  return <PageShell><section className="hero container"><div className="hero-card"><div><div className="badge">📄 Registrazione azienda</div><h1>Registrazione azienda</h1><p className="lead">Pagina predisposta nella nuova architettura Next.js. Nel prossimo step collegheremo dati reali e funzioni operative.</p></div><div className="visual-panel"><div className="message">Modulo pronto per sviluppo.</div></div></div></section></PageShell>;
+import { RegisterForm } from "@/components/forms/RegisterForm";
+
+export default function RegistratiPage() {
+  return (
+    <PageShell>
+      <section className="hero container">
+        <div className="hero-card">
+          <div>
+            <div className="badge">🏢 Registrazione azienda</div>
+            <h1>Crea il tuo spazio aziendale <span>CUBE</span></h1>
+            <p className="lead">Registra l’azienda, crea l’utente admin e attiva la prova gratuita di 30 giorni.</p>
+            <div className="message">La registrazione crea Tenant, User Admin e Subscription nel database Supabase.</div>
+          </div>
+          <Suspense fallback={<div className="visual-panel">Caricamento...</div>}>
+            <RegisterForm />
+          </Suspense>
+        </div>
+      </section>
+    </PageShell>
+  );
 }
