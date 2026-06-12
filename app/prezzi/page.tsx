@@ -1,0 +1,3 @@
+import { PageShell } from "@/components/PageShell";
+import { PricingCards } from "@/components/PricingCards";
+export default function PrezziPage(){return <PageShell><section className="hero container"><div className="hero-card"><div><div className="badge">💳 Pacchetti</div><h1>Scegli il piano più adatto alla tua <span>azienda</span></h1><p className="lead">Tutti i pacchetti includono 30 giorni gratuiti di prova.</p></div><div className="visual-panel"><div className="message">Free, Starter, Professional, Business ed Enterprise.</div></div></div></section><section className="section container"><PricingCards /></section></PageShell>}

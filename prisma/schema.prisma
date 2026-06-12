@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  TENANT_ADMIN
+  MANAGER_OPERATIVO
+  GESTIONE_FINANZIARIA
+  OPERATIVO_AVANZATO
+  OPERATIVO_BASE
+}
+
+enum AccountStatus {
+  IN_PROVA
+  ATTIVO
+  SOSPESO
+  SCADUTO
+  DISATTIVATO
+}
+
+enum ContractStatus {
+  BOZZA
+  INVIATO
+  FIRMATO
+  ATTIVO
+  SOSPESO
+  SCADUTO
+  ARCHIVIATO
+}
+
+enum PaymentStatus {
+  DA_PAGARE
+  ACCONTO
+  PAGATA
+  SCADUTA
+  SOLLECITATA
+  ANNULLATA
+}
+
+model Tenant {
+  id              String        @id @default(cuid())
+  ragioneSociale String
+  formaGiuridica String?
+  partitaIva     String?
+  codiceFiscale  String?
+  sedeLegale     String?
+  pec             String?
+  codiceSdi      String?
+  telefono        String?
+  email           String?
+  logoUrl         String?
+  status          AccountStatus @default(IN_PROVA)
+  planName        String        @default("Free")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  users           User[]
+  subscription    Subscription?
+  clients         Client[]
+  contracts       Contract[]
+  payments        Payment[]
+  invoices        Invoice[]
+  workLogs        WorkLog[]
+  documents       Document[]
+  feedbacks       Feedback[]
+}
+
+model User {
+  id           String        @id @default(cuid())
+  tenantId     String?
+  tenant       Tenant?       @relation(fields: [tenantId], references: [id])
+  username     String        @unique
+  email        String?       @unique
+  passwordHash String
+  nome         String
+  cognome      String?
+  ruolo        UserRole
+  status       AccountStatus @default(ATTIVO)
+  telefono     String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  assignedClients  ClientAssignment[]
+  workLogs         WorkLog[]
+  paymentMovements PaymentMovement[]
+  invoices         Invoice[]
+}
+
+model Plan {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  priceMonthly  Decimal  @default(0)
+  maxUsers      Int
+  maxClients    Int
+  maxContracts  Int
+  features      Json
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id             String        @id @default(cuid())
+  tenantId       String        @unique
+  tenant         Tenant        @relation(fields: [tenantId], references: [id])
+  planId         String
+  plan           Plan          @relation(fields: [planId], references: [id])
+  status         AccountStatus @default(IN_PROVA)
+  startedAt      DateTime      @default(now())
+  trialEndsAt    DateTime?
+  currentEndsAt  DateTime?
+  paymentMethod  String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Client {
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  ragioneSociale String
+  formaGiuridica String?
+  partitaIva     String?
+  codiceFiscale  String?
+  pec            String?
+  codiceSdi      String?
+  telefono       String?
+  email          String?
+  settore        String?
+  statoCrm       String   @default("Attivo")
+  note           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  contracts      Contract[]
+  payments       Payment[]
+  invoices       Invoice[]
+  workLogs       WorkLog[]
+  documents      Document[]
+  feedbacks      Feedback[]
+  assignments    ClientAssignment[]
+}
+
+model ClientAssignment {
+  id        String   @id @default(cuid())
+  tenantId  String
+  clientId  String
+  userId    String
+  client    Client   @relation(fields: [clientId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  @@unique([clientId, userId])
+}
+
+model ContractTemplate {
+  id          String   @id @default(cuid())
+  tenantId    String?
+  name        String
+  description String?
+  content     String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Contract {
+  id              String         @id @default(cuid())
+  tenantId        String
+  tenant          Tenant         @relation(fields: [tenantId], references: [id])
+  clientId        String
+  client          Client         @relation(fields: [clientId], references: [id])
+  assignedUserId  String?
+  title           String
+  type            String?
+  signedAt        DateTime?
+  startsAt        DateTime
+  endsAt          DateTime
+  durationMonths  Int
+  totalNet        Decimal
+  vatRate         Decimal        @default(22)
+  paymentTerms    String
+  jurisdiction    String         @default("Napoli")
+  status          ContractStatus @default(BOZZA)
+  services        Json?
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  payments        Payment[]
+  invoices        Invoice[]
+  workLogs        WorkLog[]
+  documents       Document[]
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  tenantId    String
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  contractId  String
+  contract    Contract      @relation(fields: [contractId], references: [id])
+  clientId    String
+  client      Client        @relation(fields: [clientId], references: [id])
+  installment Int
+  dueDate     DateTime
+  netAmount   Decimal
+  vatAmount   Decimal
+  totalAmount Decimal
+  status      PaymentStatus @default(DA_PAGARE)
+  paidAt      DateTime?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  movements   PaymentMovement[]
+  invoices    Invoice[]
+}
+
+model PaymentMovement {
+  id            String   @id @default(cuid())
+  paymentId     String
+  payment       Payment  @relation(fields: [paymentId], references: [id])
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  amount        Decimal
+  type          String   @default("Acconto")
+  paidAt        DateTime
+  attachmentUrl String?
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model Invoice {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id])
+  contractId   String?
+  contract     Contract? @relation(fields: [contractId], references: [id])
+  paymentId    String?
+  payment      Payment?  @relation(fields: [paymentId], references: [id])
+  emittedById  String?
+  emittedBy    User?     @relation(fields: [emittedById], references: [id])
+  number       String
+  year         Int
+  invoiceDate  DateTime
+  dueDate      DateTime?
+  description  String
+  netAmount    Decimal
+  vatRate      Decimal
+  vatAmount    Decimal
+  totalAmount  Decimal
+  status       String    @default("Bozza")
+  pdfUrl       String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model WorkLog {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id])
+  contractId    String?
+  contract      Contract? @relation(fields: [contractId], references: [id])
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  date          DateTime
+  time          String?
+  type          String?
+  title         String
+  description   String?
+  status        String?
+  attachmentUrl String?
+  internalNotes String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id])
+  contractId  String?
+  contract    Contract? @relation(fields: [contractId], references: [id])
+  type        String?
+  title       String
+  fileUrl     String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Feedback {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id])
+  source        String   @default("Cliente")
+  rating        Int?
+  text          String?
+  attachmentUrl String?
+  notes         String?
+  createdAt     DateTime @default(now())
+}

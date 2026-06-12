@@ -1,0 +1,21 @@
+import Link from "next/link";
+import { plans } from "@/lib/plans";
+
+export function PricingCards() {
+  return (
+    <div className="grid-5">
+      {plans.map((plan) => (
+        <article key={plan.name} className={`price-card ${plan.highlighted ? "featured" : ""}`}>
+          {plan.highlighted && <div className="ribbon">Più scelto</div>}
+          <h3>{plan.name}</h3>
+          <div className="price">{plan.price}<small>{plan.period}</small></div>
+          <p>{plan.description}</p>
+          <ul>{plan.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
+          <Link className={plan.highlighted ? "btn btn-primary" : "btn btn-secondary"} href={`/registrati?plan=${plan.name}`}>
+            {plan.name === "Free" ? "Prova gratis" : "Scegli piano"}
+          </Link>
+        </article>
+      ))}
+    </div>
+  );
+}
