@@ -1,33 +1,19 @@
-# CUBE Management Contract — Next.js SaaS Starter Completo
+# CUBE Management Contract — Next.js + Supabase da zero
 
-Primo step della migrazione da Streamlit a un SaaS moderno.
+Questa versione è riscritta da zero senza Prisma e senza DATABASE_URL.
 
-## Stack
-- Next.js 14
-- TypeScript
-- Prisma
-- PostgreSQL
-- CSS custom premium
-- Struttura multi-tenant
+## Variabili Vercel richieste
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY
+- AUTH_SECRET
 
-## Avvio locale
-```bash
-npm install
-cp .env.example .env
-npx prisma generate
-npm run dev
-```
+## Primo passaggio
+Supabase > SQL Editor > New query: incolla `supabase/schema.sql` e clicca RUN.
 
-## Database
-Imposta `DATABASE_URL` in `.env`, poi:
-```bash
-npx prisma migrate dev --name init
-npm run seed
-```
+## Dopo deploy
+Apri `/api/setup`, poi `/login`.
 
-## Seed iniziale
-- username: superadmin
-- password: admin123
-
-## Prossimo step
-Login reale + registrazione azienda + salvataggio database.
+Credenziali:
+- superadmin
+- admin123

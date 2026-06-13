@@ -1,6 +1,1 @@
-import type { Metadata } from "next";
-import "./globals.css";
-export const metadata: Metadata = { title: "CUBE Management Contract", description: "Gestionale SaaS multi-azienda." };
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="it"><body>{children}</body></html>;
-}
+import type { Metadata } from "next";import "./globals.css";export const metadata:Metadata={title:"CUBE Management Contract",description:"Gestionale SaaS multi-azienda."};export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="it"><body>{children}</body></html>}
