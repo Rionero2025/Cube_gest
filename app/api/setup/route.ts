@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { UserRole } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 const sqlStatements = [
   `DO $$ BEGIN CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN','TENANT_ADMIN','MANAGER_OPERATIVO','GESTIONE_FINANZIARIA','OPERATIVO_AVANZATO','OPERATIVO_BASE'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
   `DO $$ BEGIN CREATE TYPE "AccountStatus" AS ENUM ('IN_PROVA','ATTIVO','SOSPESO','SCADUTO','DISATTIVATO'); EXCEPTION WHEN duplicate_object THEN null; END $$;`,
-
   `CREATE TABLE IF NOT EXISTS "Tenant" (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     "ragioneSociale" TEXT NOT NULL,
     "formaGiuridica" TEXT,
     "partitaIva" TEXT,
@@ -23,9 +25,8 @@ const sqlStatements = [
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
   );`,
-
   `CREATE TABLE IF NOT EXISTS "User" (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     "tenantId" TEXT REFERENCES "Tenant"("id") ON DELETE SET NULL,
     "username" TEXT NOT NULL UNIQUE,
     "email" TEXT UNIQUE,
@@ -38,9 +39,8 @@ const sqlStatements = [
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
   );`,
-
   `CREATE TABLE IF NOT EXISTS "Plan" (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     "name" TEXT NOT NULL UNIQUE,
     "priceMonthly" DECIMAL(65,30) NOT NULL DEFAULT 0,
     "maxUsers" INTEGER NOT NULL,
@@ -51,9 +51,8 @@ const sqlStatements = [
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
   );`,
-
   `CREATE TABLE IF NOT EXISTS "Subscription" (
-    "id" TEXT PRIMARY KEY,
+    "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     "tenantId" TEXT NOT NULL UNIQUE REFERENCES "Tenant"("id") ON DELETE CASCADE,
     "planId" TEXT NOT NULL REFERENCES "Plan"("id") ON DELETE RESTRICT,
     "status" "AccountStatus" NOT NULL DEFAULT 'IN_PROVA',
@@ -67,12 +66,13 @@ const sqlStatements = [
   );`
 ];
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-
 export async function GET() {
   try {
-    const { prisma } = await import("@/lib/db");
+    const { getPrisma } = await import("@/lib/db");
+    const prisma = getPrisma();
+
+    await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
+
     for (const sql of sqlStatements) {
       await prisma.$executeRawUnsafe(sql);
     }

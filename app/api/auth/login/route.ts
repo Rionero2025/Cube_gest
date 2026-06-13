@@ -7,7 +7,8 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const { prisma } = await import("@/lib/db");
+    const { getPrisma } = await import("@/lib/db");
+    const prisma = getPrisma();
 
     const body = await request.json();
     const username = String(body.username || "").trim();
