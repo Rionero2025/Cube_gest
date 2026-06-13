@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/db";
 import { UserRole } from "@prisma/client";
 
 const sqlStatements = [
@@ -68,8 +67,12 @@ const sqlStatements = [
   );`
 ];
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET() {
   try {
+    const { prisma } = await import("@/lib/db");
     for (const sql of sqlStatements) {
       await prisma.$executeRawUnsafe(sql);
     }

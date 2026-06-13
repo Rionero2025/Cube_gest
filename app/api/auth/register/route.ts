@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/db";
 import { createSessionToken, setSessionCookie } from "@/lib/session";
 import { UserRole } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function POST(request: Request) {
   try {
+    const { prisma } = await import("@/lib/db");
+
     const body = await request.json();
 
     const ragioneSociale = String(body.ragioneSociale || "").trim();
